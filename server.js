@@ -11,12 +11,13 @@ server.on("listening", () => {
 
 server.bind(9000, "localhost");
 
-server.on('message', (msg, rinfo) => {
+const registerNewUser = (msg, rinfo)=> {
   console.log(`Peer ${rinfo.address}:${rinfo.port} registered`);
   clients.forEach(client => {
     let message = {
       data: rinfo,
-      type: "update"
+      type: "update",
+      name: msg.name
     }
     server.send(JSON.stringify(message), client.port, client.address)
   })
@@ -26,5 +27,32 @@ server.on('message', (msg, rinfo) => {
       type: "register"
   }
   server.send(JSON.stringify(message), rinfo.port, rinfo.address)
-  clients.push(rinfo);
+  clients.push(Object.assign({}, rinfo, { name: msg.name }));
+}
+
+const deregisterNewUser = (msg, rinfo) => {
+  console.log(`Peer ${rinfo.address}:${rinfo.port} deregistered`);
+  clients = clients.filter(client => !(client.port === rinfo.port && client.address === rinfo.address))
+  clients.forEach(client => {
+    let message = {
+      data: rinfo,
+      type: "remove",
+    }
+    server.send(JSON.stringify(message), client.port, client.address)
+  });
+}
+
+
+server.on('message', (msg, rinfo) => {
+  msg = JSON.parse(msg);
+  switch(msg.type) {
+    case "register":
+      registerNewUser(msg, rinfo);
+      break;
+    case "deregister":
+      deregisterNewUser(msg, rinfo);
+      break;
+  }
+  console.log(`Current number of client: ${clients.length}`);
+
 });
