@@ -1,0 +1,24 @@
+{
+  "name": "ecse-414",
+  "version": "1.0.0",
+  "description": "ECSE 414 Project",
+  "main": "server.js",
+  "dependencies": {
+    "ip": "^1.1.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://callumdmay@github.com/callumdmay/ecse-414.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/callumdmay/ecse-414/issues"
+  },
+  "homepage": "https://github.com/callumdmay/ecse-414#readme"
+}

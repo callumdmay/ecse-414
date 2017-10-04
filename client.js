@@ -16,7 +16,8 @@ client.on("listening", () => {
     client.send(msg, server_port, server_ip)
   } else {
     console.log("Bad IP/port");
-    socket.close();
+    client.close();
+    process.exit();
   }
 })
 

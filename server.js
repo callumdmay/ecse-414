@@ -1,7 +1,10 @@
 var dgram = require('dgram');
+var ip = require('ip');
 
 var server = dgram.createSocket("udp4");
 
+var server_ip = process.argv[2];
+var server_port = process.argv[3];
 var clients = [];
 
 server.on("listening", () => {
@@ -9,7 +12,11 @@ server.on("listening", () => {
   console.log(`Listening at ${address.address}:${address.port}`);
 })
 
-server.bind(9000, "localhost");
+if (server_ip && server_port) {
+  server.bind(server_port, server_ip);
+} else {
+  server.bind(3000, ip.address());
+}
 
 const registerNewUser = (msg, rinfo)=> {
   console.log(`Peer ${rinfo.address}:${rinfo.port} registered`);
