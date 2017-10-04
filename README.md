@@ -2,8 +2,6 @@
 
 ### Instructions
 
-Install node/npm on computer, navigate to folder, run `npm i` 
-
 To run the server: `node server.js`
 
 To start a client: `node client.js [ip address] [port] [chat name]`
