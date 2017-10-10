@@ -1,9 +1,10 @@
-var prompt = require('prompt');
 var dgram = require('dgram');
 
 var server_ip = process.argv[2];
 var server_port = process.argv[3];
 var chat_name = process.argv[4];
+const PYTHON_PORT = isNaN(parseInt(process.argv[5])) ? null : parseInt(process.argv[5]);
+
 
 var client = dgram.createSocket("udp4");
 
@@ -22,16 +23,20 @@ client.on("listening", () => {
 })
 
 client.on("message" , (msg, rinfo) => {
-  message = JSON.parse(msg);
+  let message = JSON.parse(msg);
   if (rinfo.address === server_ip && rinfo.port === parseInt(server_port)) {
     switch(message.type) {
       case "register":
-        console.log("Connected to chat!");
-        console.log("************************");
+      console.log("Connected to server")
+        if (PYTHON_PORT) {
+          client.send(JSON.stringify({type: "connect", port: client.address().port}), PYTHON_PORT);
+        }
         peers = message.data;
         break;
       case "update":
-        console.log(`${message.name} joined chat`);
+        if (PYTHON_PORT) {
+          client.send(JSON.stringify({type: "message", message: `${message.name} joined chat`}), PYTHON_PORT);
+        }
         peers.push(Object.assign({}, message.data, { name: message.name }))
         break;
       case "remove":
@@ -39,12 +44,28 @@ client.on("message" , (msg, rinfo) => {
           return peer.port === message.data.port && peer.address === message.data.address
         })
         peers = peers.filter(peer => !(peer.port === message.data.port && peer.address === message.data.address));
-        console.log(`${leaving_peer.name} has left chat`);
+
+        if (leaving_peer) {
+          if (PYTHON_PORT) {
+            client.send(JSON.stringify({type: "message", message: `${leaving_peer.name} has left chat`}), PYTHON_PORT);
+          }
+        }
         break;
     }
   } else {
     if (message.type === "chat") {
-      console.log(`${message.name}: `, message.content);
+      let peer = peers.find(peer => peer.port === rinfo.port && peer.address === rinfo.address)
+      message.name = peer.name;
+      if (PYTHON_PORT) {
+        client.send(JSON.stringify(message), PYTHON_PORT);
+      }
+    }
+    if (message.type === "local") {
+      let send_message = {
+        type: "chat",
+        content: message.content
+      }
+      peers.forEach(peer => client.send(JSON.stringify(send_message), peer.port, peer.address))
     }
   }
 })
@@ -62,9 +83,10 @@ var stdin = process.openStdin();
 stdin.addListener("data", function(data) {
     let message = {
       type: "chat",
-      name: chat_name,
       content: data.toString().trim()
     }
     peers.forEach(peer => client.send(JSON.stringify(message), peer.port, peer.address))
   });
-client.bind()
+
+
+client.bind();

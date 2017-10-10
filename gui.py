@@ -1,52 +1,75 @@
 #!/usr/bin/python
-
+import threading
+import node
 from appJar import gui
+import json
 
-ip = "0.0.0.0"
+class App:
+	server_ip = "127.0.0.1"
+	server_port = "3000"
+	chat_name = "Test"
+	app = gui("Login Window", "600x500")
+	local_client_port = ""
 
+	def __init__(self):
+		# CREATE MAIN WINDOW
+		self.app.addLabel("title", "Welcome to McMessage")
+		self.app.setLabelBg("title", "red")
+		self.app.addLabel("server_ip")
+		self.app.addScrolledTextArea("main_text_area")
+		self.app.addLabelEntry("Chat")
+		self.app.addButton("Send", self.sendMessage)
 
-def subWindowButtons(button):
-	if button == "Cancel":
-		app.hideSubWindow("settings")
-	if button == "Submit":
-		ip = app.getEntry("ipEnt")
-		app.hideSubWindow("settings")
-		app.setLabel("ip", "Connection: " + ip)
+		# GENERATE SETTINGS SUBWINDOW
+		self.app.startSubWindow("config", title="Config", modal=True)
+		self.app.addLabel(title="server_ip_label", text="Server IP:", row=0, column=0)
+		self.app.addEntry("server_ip_ent", row=0, column=1)
+		self.app.addLabel(title="port_label", text="Server port:", row=1, column=0)
+		self.app.addEntry("server_port_ent", 1, 1)
+		self.app.addLabel(title="chat_name_label", text="Chat name:", row=2, column=0)
+		self.app.addEntry("chat_name_ent", 2, 1)
+		self.app.addButtons( ["Submit"], self.handleServerIPSubmit, colspan=2)
+		self.app.stopSubWindow()
 
-def openSettings(button):
-	app.showSubWindow("settings")
+		self.app.setFocus("server_ip_ent")
+		self.app.showSubWindow("config")
 
-def sendMessage(button):
-	msg = app.getEntry("Chat")
-	if not msg == "":
-		app.clearEntry("Chat")
-		app.setTextArea("Conversation", "You : " + msg + "\n", end=True, callFunction=True)
-		# SEND MSG THROUGH SOCKET
+		self.app.go()
 
-def receiveMessage(msg):
-	# SEND MSG THROUGH SOCKET
-	if not msg == "":
-		app.setTextArea("Conversation", "Sender : " + msg + "\n", end=True, callFunction=True)
+	def handleServerIPSubmit(self, button):
+		self.app.hideSubWindow("config")
+		server_ip = self.app.getEntry("server_ip_ent")
+		server_port = self.app.getEntry("server_port_ent")
+		chat_name = self.app.getEntry("chat_name_ent")
+		self.app.setLabel("server_ip", "Server connection: " + self.server_ip + ":" + self.server_port)
+		self.app.setLabel("title", "Welcome to McMessage, " + self.chat_name)
+		self.app.setTextArea("main_text_area", "Connecting to chat...")
+		self.app.setFocus("Chat")
+		threading.Thread(target=node.startNodeClient, args=(self.server_ip, self.server_port, self.chat_name)).start()
+		self.app.thread(self.listenForMessages)
 
+	def sendMessage(self, button):
+		msg = self.app.getEntry("Chat")
+		if msg and self.local_client_port:
 
+			self.app.clearEntry("Chat")
+			self.app.setTextArea("main_text_area", "You : " + msg + "\n", end=True, callFunction=True)
+			node.send(msg, self.local_client_port)
 
-app = gui("Login Window", "600x500")
+	def receiveMessage(msg):
+		if msg:
+			app.setTextArea("main_text_area", "Sender : " + msg + "\n", end=True, callFunction=True)
 
-# CREATE MAIN WINDOW
-app.addLabel("title", "Welcome to McMessage")
-app.setLabelBg("title", "red")
-app.addLabel("ip", "Connection: " + ip)
-app.addScrolledTextArea("Conversation")
-app.addLabelEntry("Chat")
-app.addButton("Send", sendMessage)
-app.addButton("Setup connection", openSettings)
+	def listenForMessages(self):
+		while True:
+			data = node.socket.recv(1024) # buffer size is 1024 bytes
+			msg = json.loads(data)
+			if msg["type"] == "connect":
+				self.app.setTextArea("main_text_area", "Connected!\n")
+				self.local_client_port = msg["port"]
+			if msg["type"] == "message":
+				self.app.setTextArea("main_text_area", msg["message"] + "\n")
+			if msg["type"] == "chat":
+				self.app.setTextArea("main_text_area", "{0}: {1}\n".format(msg["name"], msg["content"]))
 
-# GENERATE SETTINGS SUBWINDOW
-app.startSubWindow("settings", modal=True)
-app.addLabel("userIp", "Connection IP:", 0, 0)
-app.addEntry("ipEnt", 0, 1)
-app.addButtons( ["Submit", "Cancel"], subWindowButtons, colspan=2)
-app.stopSubWindow()
-
-app.go()
-
+app = App()
