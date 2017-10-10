@@ -1,14 +1,20 @@
 # ECSE 414 Project
 
-### Instructions
+## Instructions
 
-To run the server: `node server.js`
+**You must have node, pip and pipenv installed**
 
-To start a client: `node client.js [ip address] [port] [chat name]`
+#### To run the server:
+`node server.js`
 
-Where the ip address and port are of the server. 
+#### To start a client:
+First install all python dependencies: `pipenv install`
 
-Example: `node client.js 127.0.0.1 9000 Callum`
+Create the pipenv shell: `pipenv --three shell`
 
-The server will then update the 
-client with all the known IPs of the other clients.
+Then start the pipenv virtual shell if it didn't already start: `pipenv shell`
+
+Then run the gui script within the shell: `python gui.py`
+
+---
+The client will connect to the server, updating the server with its own IP and port, and the server will return the IP and port of all peers to begin chat.
