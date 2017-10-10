@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 appjar = "*"
+naked = "*"
+
 
 
 [dev-packages]
