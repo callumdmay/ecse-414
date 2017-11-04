@@ -8,11 +8,12 @@
 `node server.js`
 
 #### To start a client:
-First install all python dependencies: `pipenv install`
 
 Create the pipenv shell: `pipenv --three shell`
 
 Then start the pipenv virtual shell if it didn't already start: `pipenv shell`
+
+Install all python dependencies: `pipenv install`
 
 Then run the gui script within the shell: `python gui.py`
 
