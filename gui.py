@@ -31,16 +31,16 @@ class App:
 		self.app.addButtons( ["Submit"], self.handleServerIPSubmit, colspan=2)
 		self.app.stopSubWindow()
 
-		self.app.setFocus("server_ip_ent")
 		self.app.showSubWindow("config")
+		self.app.setFocus("server_ip_ent")
 
 		self.app.go()
 
 	def handleServerIPSubmit(self, button):
 		self.app.hideSubWindow("config")
-		server_ip = self.app.getEntry("server_ip_ent")
-		server_port = self.app.getEntry("server_port_ent")
-		chat_name = self.app.getEntry("chat_name_ent")
+		self.server_ip = self.app.getEntry("server_ip_ent")
+		self.server_port = self.app.getEntry("server_port_ent")
+		self.chat_name = self.app.getEntry("chat_name_ent")
 		self.app.setLabel("server_ip", "Server connection: " + self.server_ip + ":" + self.server_port)
 		self.app.setLabel("title", "Welcome to McMessage, " + self.chat_name)
 		self.app.setTextArea("main_text_area", "Connecting to chat...")
