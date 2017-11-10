@@ -8,7 +8,7 @@ class App:
 	server_ip = "127.0.0.1"
 	server_port = "3000"
 	chat_name = "Test"
-	app = gui("Login Window", "600x500")
+	app = gui("McMessage", "600x500")
 	local_client_port = ""
 
 	def __init__(self):
@@ -55,10 +55,6 @@ class App:
 			self.app.clearEntry("Chat")
 			self.app.setTextArea("main_text_area", "You : " + msg + "\n", end=True, callFunction=True)
 			node.send(msg, self.local_client_port)
-
-	def receiveMessage(msg):
-		if msg:
-			app.setTextArea("main_text_area", "Sender : " + msg + "\n", end=True, callFunction=True)
 
 	def listenForMessages(self):
 		while True:
