@@ -21,23 +21,24 @@ class App:
 		self.app.addButton("Send", self.sendMessage)
 
 		# GENERATE SETTINGS SUBWINDOW
-		self.app.startSubWindow("config", title="Config", modal=True)
-		self.app.addLabel(title="server_ip_label", text="Server IP:", row=0, column=0)
-		self.app.addEntry("server_ip_ent", row=0, column=1)
-		self.app.addLabel(title="port_label", text="Server port:", row=1, column=0)
-		self.app.addEntry("server_port_ent", 1, 1)
-		self.app.addLabel(title="chat_name_label", text="Chat name:", row=2, column=0)
-		self.app.addEntry("chat_name_ent", 2, 1)
-		self.app.addButtons( ["Submit"], self.handleServerIPSubmit, colspan=2)
-		self.app.stopSubWindow()
+		with self.app.subWindow("config", title="McMessage Config", modal=True):
+			self.app.setGeometry("300x100")
+			self.app.addLabel(title="server_ip_label", text="Server IP:", row=0, column=0)
+			self.app.addEntry("server_ip_ent", row=0, column=1)
+			self.app.addLabel(title="port_label", text="Server port:", row=1, column=0)
+			self.app.addEntry("server_port_ent", 1, 1)
+			self.app.addLabel(title="chat_name_label", text="Chat name:", row=2, column=0)
+			self.app.addEntry("chat_name_ent", 2, 1)
+			self.app.addButtons( ["Submit"], self.handleServerIPSubmit, colspan=2)
 
-		self.app.showSubWindow("config")
 		self.app.setFocus("server_ip_ent")
+		self.app.go(startWindow="config")
 
-		self.app.go()
 
 	def handleServerIPSubmit(self, button):
 		self.app.hideSubWindow("config")
+		self.app.show()
+		self.app.enableEnter(self.sendMessage)
 		self.server_ip = self.app.getEntry("server_ip_ent")
 		self.server_port = self.app.getEntry("server_port_ent")
 		self.chat_name = self.app.getEntry("chat_name_ent")
