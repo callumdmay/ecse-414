@@ -24,6 +24,8 @@ client.on("listening", () => {
 
 client.on("message" , (msg, rinfo) => {
   let message = JSON.parse(msg);
+
+  //Message from the server
   if (rinfo.address === server_ip && rinfo.port === parseInt(server_port)) {
     switch(message.type) {
       case "register":
@@ -32,12 +34,20 @@ client.on("message" , (msg, rinfo) => {
           client.send(JSON.stringify({type: "connect", port: client.address().port}), PYTHON_PORT);
         }
         peers = message.data;
+        peers.forEach(peer => client.send(JSON.stringify({
+          type: "holepunch"
+        }), peer.port, peer.address))
         break;
       case "update":
         if (PYTHON_PORT) {
           client.send(JSON.stringify({type: "message", message: `${message.name} joined chat`}), PYTHON_PORT);
         }
         peers.push(Object.assign({}, message.data, { name: message.name }))
+        let send_message = {
+        }
+        client.send(JSON.stringify({
+          type: "holepunch"
+        }), message.data.port, message.data.address)
         break;
       case "remove":
         leaving_peer = peers.find(peer => {
@@ -53,19 +63,21 @@ client.on("message" , (msg, rinfo) => {
         break;
     }
   } else {
+    //Message from another client
     if (message.type === "chat") {
       let peer = peers.find(peer => peer.port === rinfo.port && peer.address === rinfo.address)
       message.name = peer.name;
       if (PYTHON_PORT) {
         client.send(JSON.stringify(message), PYTHON_PORT);
       }
-    }
-    if (message.type === "local") {
+    } else if (message.type === "local") {
       let send_message = {
         type: "chat",
         content: message.content
       }
       peers.forEach(peer => client.send(JSON.stringify(send_message), peer.port, peer.address))
+    } else if (message.type === "holepunch") {
+      console.log(`Peer holepunched. Address ${rinfo.address} Port: ${rinfo.port}`);
     }
   }
 })
