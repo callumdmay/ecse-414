@@ -40,7 +40,7 @@ const holePunch = (count) => {
   if (count === undefined) {
     count = 10;
   }
-  
+
   if (unconnected_peers.length > 0) {
     unconnected_peers.forEach(peer => {
       console.log(`Attempting holepunch: Address ${peer.address} Port: ${peer.port}`);
@@ -53,7 +53,7 @@ const holePunch = (count) => {
 
     if (count && count > 0) {
       count--;
-      setTimeout(holePunch, 100);
+      setTimeout(() => {holePunch(count);}, 100);
     }
   }
 };
@@ -95,14 +95,14 @@ const handleServerMessage = (message) => {
   }
 };
 
-client.on("message" , (message, rinfo) => {
+client.on("message" , (message) => {
   message = JSON.parse(message);
-  if (rinfo.address === server_ip && rinfo.port === parseInt(server_port)) {
+  if (message.type === "register" || message.type === "deregister" || message.type === "update") {
     //Message from the server
     handleServerMessage(message);
     } else {
+    //Message from another client
     if (message.type === "chat") {
-      //Message from another client
       let peer = peers.find(peer => peer.port === message.port && peer.address === message.address);
       message.name = peer.name;
       //Send client message to Python GUI
