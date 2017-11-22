@@ -1,5 +1,5 @@
-var dgram = require('dgram');
-var ip = require('ip');
+var dgram = require("dgram");
+var ip = require("ip");
 
 var server = dgram.createSocket("udp4");
 
@@ -10,7 +10,7 @@ var clients = [];
 server.on("listening", () => {
   const address = server.address();
   console.log(`Listening at ${address.address}:${address.port}`);
-})
+});
 
 if (server_ip && server_port) {
   server.bind(server_port, server_ip);
@@ -19,40 +19,41 @@ if (server_ip && server_port) {
 }
 
 const registerNewUser = (msg, rinfo)=> {
-  console.log(`Peer ${rinfo.address}:${rinfo.port} registered`);
+  let new_client = Object.assign({}, rinfo, { name: msg.name }, { address: msg.address }, { port: msg.port });
+  console.log(`Peer ${new_client.address}:${new_client.port} registered`);
   clients.forEach(client => {
     let message = {
-      data: rinfo,
+      data: new_client,
       type: "update",
       name: msg.name
-    }
-    server.send(JSON.stringify(message), client.port, client.address)
-  })
+    };
+    server.send(JSON.stringify(message), client.port, client.address);
+  });
 
   let message = {
       data: clients,
       type: "register"
-  }
-  server.send(JSON.stringify(message), rinfo.port, rinfo.address)
-  clients.push(Object.assign({}, rinfo, { name: msg.name }));
-}
+  };
+  server.send(JSON.stringify(message), new_client.port, new_client.address);
+  clients.push(new_client);
+};
 
 const deregisterNewUser = (msg, rinfo) => {
-  console.log(`Peer ${rinfo.address}:${rinfo.port} deregistered`);
-  clients = clients.filter(client => !(client.port === rinfo.port && client.address === rinfo.address))
+  console.log(`Peer ${msg.address}:${msg.port} deregistered`);
+  clients = clients.filter(client => !(client.port === msg.port && client.address === msg.address));
+  let deregistered_client = Object.assign({}, rinfo, { address: msg.address }, { port: msg.port });
   clients.forEach(client => {
     let message = {
-      data: rinfo,
+      data: deregistered_client,
       type: "remove",
-    }
-    server.send(JSON.stringify(message), client.port, client.address)
+    };
+    server.send(JSON.stringify(message), client.port, client.address);
   });
-}
+};
 
-
-server.on('message', (msg, rinfo) => {
+server.on("message", (msg, rinfo) => {
   msg = JSON.parse(msg);
-  switch(msg.type) {
+  switch (msg.type) {
     case "register":
       registerNewUser(msg, rinfo);
       break;
@@ -60,6 +61,6 @@ server.on('message', (msg, rinfo) => {
       deregisterNewUser(msg, rinfo);
       break;
   }
-  console.log(`Current number of client: ${clients.length}`);
+  console.log(`Current number of clients: ${clients.length}`);
 
 });
