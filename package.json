@@ -10,6 +10,7 @@
   "devDependencies": {
     "eslint": "^4.11.0"
   },
+  "main": "node server.js",
   "scripts": {
     "start": "node server.js"
   },
