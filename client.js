@@ -10,6 +10,7 @@ const PYTHON_PORT = isNaN(parseInt(process.argv[5])) ? null : parseInt(process.a
 var client = dgram.createSocket("udp4");
 
 var peers = [];
+var unconnected_peers = [];
 
 var public_address = null;
 
@@ -35,6 +36,28 @@ client.on("listening", () => {
   }
 });
 
+const holePunch = (count) => {
+  if (count === undefined) {
+    count = 10;
+  }
+  
+  if (unconnected_peers.length > 0) {
+    unconnected_peers.forEach(peer => {
+      console.log(`Attempting holepunch: Address ${peer.address} Port: ${peer.port}`);
+      client.send(JSON.stringify({
+        type: "holepunch",
+        address: public_address,
+        port: client.address().port
+      }), peer.port, peer.address);
+    });
+
+    if (count && count > 0) {
+      count--;
+      setTimeout(holePunch, 100);
+    }
+  }
+};
+
 const handleServerMessage = (message) => {
   switch (message.type) {
     case "register":
@@ -45,26 +68,16 @@ const handleServerMessage = (message) => {
       }
       console.log("Client info from server:\n", message);
       peers = message.data;
-      peers.forEach(peer => {
-        console.log(`Attempting holepunch: Address ${peer.address} Port: ${peer.port}`);
-        client.send(JSON.stringify({
-          type: "holepunch",
-          address: public_address,
-          port: client.address().port
-        }), peer.port, peer.address);
-      });
+      unconnected_peers = message.data;
+      holePunch();
       break;
     case "update":
       if (PYTHON_PORT) {
         client.send(JSON.stringify({ type: "message", message: `${message.name} joined chat` }), PYTHON_PORT);
       }
       peers.push(Object.assign({}, message.data, { name: message.name }));
-      console.log(`New peer. Attempting holepunch: Address ${message.data.address} Port: ${message.data.port}`);
-      client.send(JSON.stringify({
-        type: "holepunch",
-        address: public_address,
-        port: client.address().port
-      }), message.data.port, message.data.address);
+      unconnected_peers.push(Object.assign({}, message.data, { name: message.name }));
+      holePunch();
       break;
     case "remove": {
       let leaving_peer = peers.find(peer => {
@@ -107,8 +120,20 @@ client.on("message" , (message, rinfo) => {
       //Send chat message we received from Python GUI to all clients we know of
       peers.forEach(peer => client.send(JSON.stringify(send_message), peer.port, peer.address));
     } else if (message.type === "holepunch") {
-      //Received holepunch from another client
+      //Received holepunch attempt from another client
       console.log(`Peer holepunched. Address ${message.address} Port: ${message.port}`);
+      //Acknowledge holepunch
+      let send_message = {
+        type: "ack",
+        address: public_address,
+        port: client.address().port
+      };
+      client.send(JSON.stringify(send_message), message.port, message.address);
+    } else if (message.type === "ack") {
+      //Peer acknowledged our holepunch attempt
+      console.log(`Peer acknowledged holepunch. Address ${message.address} Port: ${message.port}`);
+      //Remove peer from unconnected peers
+      unconnected_peers.filter(peer => !(peer.address === message.address && peer.port === message.port));
     }
   }
 });
