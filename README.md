@@ -5,7 +5,7 @@
 **You must have node, pip and pipenv installed**
 
 #### To run the server:
-`node server.js`
+`node server.js [ip] [port]`
 
 #### To start a client:
 
