@@ -4,9 +4,12 @@
   "description": "ECSE 414 Project",
   "main": "server.js",
   "dependencies": {
-    "ip": "^1.1.5"
+    "ip": "^1.1.5",
+    "public-ip": "^2.3.5"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^4.11.0"
+  },
   "scripts": {
     "start": "node server.js"
   },
