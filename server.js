@@ -3,8 +3,7 @@ var ip = require("ip");
 
 var server = dgram.createSocket("udp4");
 
-var server_ip = process.argv[2];
-var server_port = process.argv[3];
+var server_port = process.argv[2];
 var clients = [];
 
 server.on("listening", () => {
@@ -12,8 +11,8 @@ server.on("listening", () => {
   console.log(`Listening at ${address.address}:${address.port}`);
 });
 
-if (server_ip && server_port) {
-  server.bind(server_port, server_ip);
+if (server_port) {
+  server.bind(server_port, ip.address());
 } else {
   server.bind(3000, ip.address());
 }
