@@ -155,7 +155,9 @@ var stdin = process.openStdin();
 stdin.addListener("data", function(data) {
     let message = {
       type: "chat",
-      content: data.toString().trim()
+      content: data.toString().trim(),
+      address: public_address,
+      port: client.address().port
     };
     peers.forEach(peer => client.send(JSON.stringify(message), peer.port, peer.address));
   });
