@@ -105,6 +105,7 @@ client.on("message" , (message) => {
     if (message.type === "chat") {
       let peer = peers.find(peer => peer.port === message.port && peer.address === message.address);
       message.name = peer.name;
+      console.log(`${message.name}: ${message.content}`);
       //Send client message to Python GUI
       if (PYTHON_PORT) {
         client.send(JSON.stringify(message), PYTHON_PORT);
@@ -149,5 +150,14 @@ process.on("SIGINT", () => {
     process.exit();
   });
 });
+
+var stdin = process.openStdin();
+stdin.addListener("data", function(data) {
+    let message = {
+      type: "chat",
+      content: data.toString().trim()
+    };
+    peers.forEach(peer => client.send(JSON.stringify(message), peer.port, peer.address));
+  });
 
 client.bind();
