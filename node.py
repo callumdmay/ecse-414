@@ -11,9 +11,11 @@ socket.bind((UDP_IP, 0))
 ip, UDP_PORT = socket.getsockname()
 
 def startNodeClient(server_ip, server_port, chat_name):
+    #Start the node client for network communications
     execute_js('client.js {0} {1} {2} {3}'.format(server_ip, server_port, chat_name, UDP_PORT))
 
 def send(msg, port):
+    # Send message to node client so that it can send to other clients
     message = {
         "type": "local",
         "content": msg

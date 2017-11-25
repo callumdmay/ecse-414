@@ -34,7 +34,7 @@ class App:
 		self.app.setFocus("server_ip_ent")
 		self.app.go(startWindow="config")
 
-
+	# Save server data and start node client
 	def handleServerIPSubmit(self, button):
 		self.app.hideSubWindow("config")
 		self.app.show()
@@ -49,6 +49,7 @@ class App:
 		threading.Thread(target=node.startNodeClient, args=(self.server_ip, self.server_port, self.chat_name)).start()
 		self.app.thread(self.listenForMessages)
 
+	# Capture client message from chatbox and send to node client
 	def sendMessage(self, button):
 		msg = self.app.getEntry("Chat")
 		if msg and self.local_client_port:
@@ -57,6 +58,7 @@ class App:
 			self.app.setTextArea("main_text_area", "You : " + msg + "\n", end=True, callFunction=True)
 			node.send(msg, self.local_client_port)
 
+	# Listen for messages from other clients
 	def listenForMessages(self):
 		while True:
 			data = node.socket.recv(1024) # buffer size is 1024 bytes

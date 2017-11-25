@@ -16,9 +16,9 @@ var public_address = null;
 
 //Called when UDP client socket is ready
 client.on("listening", () => {
-  console.log("Connecting...");
   if (server_ip && server_port) {
-    //Use node package to get public ip
+    //Use node package to get public ip, necessary for communications
+    console.log("Getting public IP...");
     publicIp.v4().then(address => {
       public_address = address;
       let msg = JSON.stringify({
@@ -27,6 +27,7 @@ client.on("listening", () => {
         address: address,
         port: client.address().port
       });
+      console.log("Connecting to server...");
     client.send(msg, server_port, server_ip);
     });
   } else {
@@ -36,6 +37,7 @@ client.on("listening", () => {
   }
 });
 
+//This function attempts to holepunch 10 times, with a 100ms timeout between attempts
 const holePunch = (count) => {
   if (count === undefined) {
     count = 10;
@@ -60,6 +62,7 @@ const holePunch = (count) => {
 
 const handleServerMessage = (message) => {
   switch (message.type) {
+    //Initial message from server with addresses of other clients
     case "register":
     console.log("Connected to server");
       if (PYTHON_PORT) {
@@ -71,6 +74,7 @@ const handleServerMessage = (message) => {
       unconnected_peers = message.data;
       holePunch();
       break;
+    //Add new client to peer list
     case "update":
       if (PYTHON_PORT) {
         client.send(JSON.stringify({ type: "message", message: `${message.name} joined chat` }), PYTHON_PORT);
@@ -79,6 +83,7 @@ const handleServerMessage = (message) => {
       unconnected_peers.push(Object.assign({}, message.data, { name: message.name }));
       holePunch();
       break;
+    //Remove client from peer list
     case "remove": {
       let leaving_peer = peers.find(peer => {
         return peer.port === message.data.port && peer.address === message.data.address;
@@ -139,6 +144,7 @@ client.on("message" , (message) => {
   }
 });
 
+//function to send server deregister message when a client leaves
 process.on("SIGINT", () => {
   let msg = JSON.stringify({
     type: "deregister",
@@ -151,6 +157,7 @@ process.on("SIGINT", () => {
   });
 });
 
+//function that allows you to chat using the console instead of the GUI
 var stdin = process.openStdin();
 stdin.addListener("data", function(data) {
     let message = {
