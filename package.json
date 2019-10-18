@@ -8,7 +8,7 @@
     "public-ip": "^2.3.5"
   },
   "devDependencies": {
-    "eslint": "^4.11.0"
+    "eslint": "^4.18.2"
   },
   "main": "server.js",
   "scripts": {
